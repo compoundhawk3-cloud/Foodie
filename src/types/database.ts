@@ -51,7 +51,7 @@ export interface Entry {
   service_rating: number | null;
   portion_size: PortionSize | null;
   price_level: PriceLevel;
-  worth_it: boolean;
+  worth_it: boolean | null;
   city: string;
   created_at: string;
   updated_at: string;
@@ -84,7 +84,7 @@ export interface EntryFormData {
   service_rating: number | null;
   portion_size: PortionSize | null;
   price_level: PriceLevel;
-  worth_it: boolean;
+  worth_it: boolean | null;
   city: string;
   restaurant_name: string;
   photos: File[];

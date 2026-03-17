@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/lib/hooks/useAuth';
 import toast from 'react-hot-toast';
 
+const supabase = createClient();
+
 interface ProfileStats {
   totalEntries: number;
   avgRating: number;
@@ -26,9 +28,7 @@ export default function ProfilePage() {
     worthItPercent: 0,
   });
   const router = useRouter();
-  const supabase = createClient();
 
-  // Fetch stats
   const fetchStats = useCallback(async () => {
     if (!user) return;
 
@@ -41,9 +41,8 @@ export default function ProfilePage() {
 
     const totalEntries = entries.length;
     const avgRating = entries.reduce((sum, e) => sum + Number(e.foodie_rating), 0) / totalEntries;
-    const worthItCount = entries.filter((e) => e.worth_it).length;
+    const worthItCount = entries.filter((e) => e.worth_it === true).length;
 
-    // Find most common food type
     const typeCounts: Record<string, number> = {};
     entries.forEach((e) => {
       typeCounts[e.food_type] = (typeCounts[e.food_type] || 0) + 1;
@@ -56,7 +55,7 @@ export default function ProfilePage() {
       topCuisine: topCuisine.replace(/_/g, ' '),
       worthItPercent: Math.round((worthItCount / totalEntries) * 100),
     });
-  }, [user, supabase]);
+  }, [user]);
 
   useEffect(() => {
     if (profile) {
@@ -81,7 +80,7 @@ export default function ProfilePage() {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success('Profile updated!');
+      toast.success('Profile updated');
       setEditing(false);
       refetchProfile();
     }
@@ -96,21 +95,19 @@ export default function ProfilePage() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-3 border-accent border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
     <div className="px-4 py-6">
-      {/* Header */}
-      <h1 className="font-serif text-2xl font-bold text-forest mb-6">Profile</h1>
+      <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-6">Profile</h1>
 
       {/* Profile card */}
       <div className="card p-6 mb-6">
         <div className="flex items-center gap-4 mb-4">
-          {/* Avatar placeholder */}
-          <div className="w-16 h-16 rounded-full bg-forest-100 flex items-center justify-center text-2xl">
+          <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-xl font-bold text-gray-600">
             {(profile?.display_name || user?.email || '?')[0].toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
@@ -127,7 +124,7 @@ export default function ProfilePage() {
                 {profile?.display_name || 'Anonymous Foodie'}
               </h2>
             )}
-            <p className="text-sm text-gray-500 truncate">{user?.email}</p>
+            <p className="text-sm text-gray-400 truncate">{user?.email}</p>
           </div>
         </div>
 
@@ -163,7 +160,7 @@ export default function ProfilePage() {
             )}
             <button
               onClick={() => setEditing(true)}
-              className="text-sm text-accent font-medium hover:underline"
+              className="text-sm text-gray-900 font-medium underline underline-offset-2"
             >
               Edit profile
             </button>
@@ -174,27 +171,27 @@ export default function ProfilePage() {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-forest">{stats.totalEntries}</p>
-          <p className="text-xs text-gray-500">Entries</p>
+          <p className="text-2xl font-bold text-gray-900 tabular-nums">{stats.totalEntries}</p>
+          <p className="text-xs text-gray-400 mt-0.5">Entries</p>
         </div>
         <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-gold">{stats.avgRating}★</p>
-          <p className="text-xs text-gray-500">Avg Rating</p>
+          <p className="text-2xl font-bold text-gray-900 tabular-nums">{stats.avgRating}</p>
+          <p className="text-xs text-gray-400 mt-0.5">Avg Rating</p>
         </div>
         <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-forest capitalize">{stats.topCuisine}</p>
-          <p className="text-xs text-gray-500">Top Cuisine</p>
+          <p className="text-lg font-bold text-gray-900 capitalize">{stats.topCuisine}</p>
+          <p className="text-xs text-gray-400 mt-0.5">Top Cuisine</p>
         </div>
         <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-accent">{stats.worthItPercent}%</p>
-          <p className="text-xs text-gray-500">Worth It</p>
+          <p className="text-2xl font-bold text-gray-900 tabular-nums">{stats.worthItPercent}%</p>
+          <p className="text-xs text-gray-400 mt-0.5">Worth It</p>
         </div>
       </div>
 
       {/* Sign out */}
       <button
         onClick={handleSignOut}
-        className="w-full py-3 text-center text-sm text-red-500 font-medium hover:bg-red-50 rounded-xl transition-colors"
+        className="w-full py-3 text-center text-sm text-gray-400 font-medium hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
       >
         Sign Out
       </button>

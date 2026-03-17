@@ -6,13 +6,14 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import toast from 'react-hot-toast';
 
+const supabase = createClient();
+
 export default function SignupPage() {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,20 +35,18 @@ export default function SignupPage() {
       return;
     }
 
-    toast.success('Account created! Welcome to Foodie 🍽️');
+    toast.success('Account created — welcome to Foodie');
     router.replace('/journal');
   };
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm space-y-8">
-        {/* Logo / Header */}
         <div className="text-center">
-          <h1 className="font-serif text-4xl font-bold text-forest">Foodie</h1>
-          <p className="text-gray-500 mt-2">Start your food journey</p>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Foodie</h1>
+          <p className="text-gray-400 mt-1 text-sm">Create your account</p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="name" className="label">Display Name</label>
@@ -108,9 +107,9 @@ export default function SignupPage() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500">
+        <p className="text-center text-sm text-gray-400">
           Already have an account?{' '}
-          <Link href="/auth/login" className="text-accent font-medium hover:underline">
+          <Link href="/auth/login" className="text-gray-900 font-medium underline underline-offset-2">
             Sign in
           </Link>
         </p>

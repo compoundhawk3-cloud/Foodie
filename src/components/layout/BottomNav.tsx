@@ -49,7 +49,7 @@ export default function BottomNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50">
       <div className="mx-auto max-w-lg">
-        <div className="mx-3 mb-3 bg-gray-900 rounded-2xl shadow-xl px-2 py-1 flex items-center justify-around"
+        <div className="mx-3 mb-3 bg-white/90 backdrop-blur-xl rounded-2xl shadow-lg border border-gray-200/50 px-2 py-1 flex items-center justify-around"
              style={{ paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom))' }}>
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
@@ -59,14 +59,14 @@ export default function BottomNav() {
                 href={item.href}
                 className={`flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-colors min-w-[60px]
                   ${isActive
-                    ? 'text-accent'
-                    : 'text-gray-400 hover:text-gray-200'
+                    ? 'text-gray-900'
+                    : 'text-gray-400 hover:text-gray-600'
                   }`}
               >
                 {item.icon(isActive)}
                 <span className="text-[10px] font-medium">{item.label}</span>
                 {isActive && (
-                  <div className="w-1 h-1 rounded-full bg-accent" />
+                  <div className="w-1 h-1 rounded-full bg-gray-900" />
                 )}
               </Link>
             );

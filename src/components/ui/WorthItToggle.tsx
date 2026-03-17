@@ -1,38 +1,40 @@
 'use client';
 
 interface WorthItToggleProps {
-  value: boolean;
-  onChange: (value: boolean) => void;
+  value: boolean | null;
+  onChange: (value: boolean | null) => void;
   label?: string;
 }
 
 export default function WorthItToggle({ value, onChange, label }: WorthItToggleProps) {
+  const options: { key: boolean | null; label: string; activeClass: string }[] = [
+    { key: true, label: 'Yes', activeClass: 'bg-emerald-500 text-white shadow-sm' },
+    { key: null, label: 'Neutral', activeClass: 'bg-gray-500 text-white shadow-sm' },
+    { key: false, label: 'No', activeClass: 'bg-red-500 text-white shadow-sm' },
+  ];
+
   return (
     <div>
       {label && <label className="label">{label}</label>}
-      <div className="flex gap-3">
-        <button
-          type="button"
-          onClick={() => onChange(true)}
-          className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2
-            ${value
-              ? 'bg-accent text-white shadow-sm'
-              : 'bg-white text-gray-500 border border-gray-200 hover:border-accent/30'
-            }`}
-        >
-          <span className="text-lg">👍</span> Worth it!
-        </button>
-        <button
-          type="button"
-          onClick={() => onChange(false)}
-          className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2
-            ${!value
-              ? 'bg-red-500 text-white shadow-sm'
-              : 'bg-white text-gray-500 border border-gray-200 hover:border-red-300'
-            }`}
-        >
-          <span className="text-lg">👎</span> Not worth it
-        </button>
+      <div className="flex rounded-xl overflow-hidden border border-gray-200 bg-white">
+        {options.map((opt, i) => {
+          const isActive = value === opt.key;
+          return (
+            <button
+              key={i}
+              type="button"
+              onClick={() => onChange(opt.key)}
+              className={`flex-1 py-3 text-sm font-semibold transition-all
+                ${isActive
+                  ? opt.activeClass
+                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                }
+                ${i > 0 ? 'border-l border-gray-200' : ''}`}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

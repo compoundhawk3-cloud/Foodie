@@ -19,8 +19,6 @@ import type {
   MealType,
   FoodType,
   PortionSize,
-  PriceLevel,
-  Restaurant,
 } from '@/types/database';
 import { MEAL_TYPE_LABELS, FOOD_TYPE_LABELS, PORTION_SIZE_LABELS } from '@/types/database';
 
@@ -38,7 +36,7 @@ const initialForm: EntryFormData = {
   service_rating: null,
   portion_size: null,
   price_level: '2',
-  worth_it: true,
+  worth_it: null,
   city: '',
   restaurant_name: '',
   photos: [],
@@ -46,7 +44,7 @@ const initialForm: EntryFormData = {
 
 export default function WritePage() {
   const [form, setForm] = useState<EntryFormData>(initialForm);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
+  const [serviceNA, setServiceNA] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
   const { user } = useAuth();
@@ -60,7 +58,7 @@ export default function WritePage() {
     e.preventDefault();
     if (!user) return;
     if (form.foodie_rating === 0) {
-      toast.error('Please add a Foodie Rating');
+      toast.error('Please add a food rating');
       return;
     }
 
@@ -70,32 +68,38 @@ export default function WritePage() {
       // 1. Find or create restaurant
       let restaurantId: string | null = null;
 
-      if (selectedRestaurant) {
-        restaurantId = selectedRestaurant.id;
-      } else if (form.restaurant_name.trim()) {
-        // Create new restaurant
-        const { data: newRestaurant, error: restError } = await supabase
+      if (form.restaurant_name.trim()) {
+        const { data: existing } = await supabase
           .from('restaurants')
-          .insert({
-            name: form.restaurant_name.trim(),
-            city: form.city,
-            created_by: user.id,
-          })
           .select()
+          .eq('name', form.restaurant_name.trim())
+          .eq('city', form.city)
           .single();
 
-        if (restError) {
-          // Maybe it already exists (race condition) — try to find it
-          const { data: existing } = await supabase
+        if (existing) {
+          restaurantId = existing.id;
+        } else {
+          const { data: newRestaurant, error: restError } = await supabase
             .from('restaurants')
+            .insert({
+              name: form.restaurant_name.trim(),
+              city: form.city,
+              created_by: user.id,
+            })
             .select()
-            .eq('name', form.restaurant_name.trim())
-            .eq('city', form.city)
             .single();
 
-          restaurantId = existing?.id || null;
-        } else {
-          restaurantId = newRestaurant.id;
+          if (restError) {
+            const { data: retryExisting } = await supabase
+              .from('restaurants')
+              .select()
+              .eq('name', form.restaurant_name.trim())
+              .eq('city', form.city)
+              .single();
+            restaurantId = retryExisting?.id || null;
+          } else {
+            restaurantId = newRestaurant.id;
+          }
         }
       }
 
@@ -111,7 +115,7 @@ export default function WritePage() {
           food_type: form.food_type,
           comment: form.comment.trim(),
           foodie_rating: form.foodie_rating,
-          service_rating: form.service_rating,
+          service_rating: serviceNA ? null : form.service_rating,
           portion_size: form.portion_size,
           price_level: form.price_level,
           worth_it: form.worth_it,
@@ -155,9 +159,9 @@ export default function WritePage() {
         if (photoError) throw photoError;
       }
 
-      toast.success('Entry saved! 🎉');
+      toast.success('Entry saved!');
       setForm(initialForm);
-      setSelectedRestaurant(null);
+      setServiceNA(false);
       router.push('/journal');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Something went wrong';
@@ -170,12 +174,12 @@ export default function WritePage() {
   return (
     <div className="px-4 py-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="font-serif text-2xl font-bold text-forest">New Entry</h1>
-        <p className="text-sm text-gray-500">Log your dining experience</p>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900 tracking-tight">New Entry</h1>
+        <p className="text-sm text-gray-400 mt-0.5">Log your dining experience</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Photos */}
         <PhotoUpload
           photos={form.photos}
@@ -191,7 +195,7 @@ export default function WritePage() {
             type="text"
             value={form.title}
             onChange={(e) => updateForm('title', e.target.value)}
-            placeholder='e.g. "The Best Burger Ever"'
+            placeholder="What did you have?"
             className="input-field"
             required
             maxLength={100}
@@ -216,14 +220,7 @@ export default function WritePage() {
         <RestaurantSearch
           label="Restaurant"
           value={form.restaurant_name}
-          city={form.city}
-          onChange={(name, restaurant) => {
-            updateForm('restaurant_name', name);
-            setSelectedRestaurant(restaurant || null);
-            if (restaurant?.city && !form.city) {
-              updateForm('city', restaurant.city);
-            }
-          }}
+          onChange={(name) => updateForm('restaurant_name', name)}
         />
 
         {/* City */}
@@ -233,23 +230,23 @@ export default function WritePage() {
           onChange={(city) => updateForm('city', city)}
         />
 
-        {/* Meal Type */}
-        <SelectField
-          label="Meal Type"
-          value={form.meal_type}
-          onChange={(v) => updateForm('meal_type', v as MealType)}
-          options={MEAL_OPTIONS}
-          required
-        />
-
-        {/* Food Type */}
-        <SelectField
-          label="Food Type"
-          value={form.food_type}
-          onChange={(v) => updateForm('food_type', v as FoodType)}
-          options={FOOD_OPTIONS}
-          required
-        />
+        {/* Meal & Food Type — side by side */}
+        <div className="grid grid-cols-2 gap-3">
+          <SelectField
+            label="Meal Type"
+            value={form.meal_type}
+            onChange={(v) => updateForm('meal_type', v as MealType)}
+            options={MEAL_OPTIONS}
+            required
+          />
+          <SelectField
+            label="Food Type"
+            value={form.food_type}
+            onChange={(v) => updateForm('food_type', v as FoodType)}
+            options={FOOD_OPTIONS}
+            required
+          />
+        </div>
 
         {/* Portion Size */}
         <SelectField
@@ -257,26 +254,32 @@ export default function WritePage() {
           value={form.portion_size || ''}
           onChange={(v) => updateForm('portion_size', (v || null) as PortionSize | null)}
           options={PORTION_OPTIONS}
-          placeholder="Optional..."
+          placeholder="Optional"
         />
 
-        {/* Foodie Rating */}
-        <div className="card p-4 space-y-3">
+        {/* Ratings Section */}
+        <div className="card p-5 space-y-5">
           <StarRating
-            label="Foodie Rating ★"
+            label="Food Rating"
             value={form.foodie_rating}
             onChange={(v) => updateForm('foodie_rating', v)}
             size="lg"
           />
-        </div>
-
-        {/* Service Rating */}
-        <div className="card p-4 space-y-3">
+          <div className="border-t border-gray-100" />
           <StarRating
-            label="Service Rating (optional)"
+            label="Service Rating"
             value={form.service_rating || 0}
-            onChange={(v) => updateForm('service_rating', v)}
+            onChange={(v) => {
+              setServiceNA(false);
+              updateForm('service_rating', v);
+            }}
             size="md"
+            showNA
+            isNA={serviceNA}
+            onNA={() => {
+              setServiceNA(!serviceNA);
+              if (!serviceNA) updateForm('service_rating', null);
+            }}
           />
         </div>
 
@@ -313,7 +316,7 @@ export default function WritePage() {
         <button
           type="submit"
           disabled={submitting}
-          className="btn-primary w-full text-lg py-4"
+          className="btn-primary w-full text-base py-4"
         >
           {submitting ? (
             <span className="flex items-center justify-center gap-2">
@@ -321,7 +324,7 @@ export default function WritePage() {
               Saving...
             </span>
           ) : (
-            '✨ Save Entry'
+            'Save Entry'
           )}
         </button>
       </form>

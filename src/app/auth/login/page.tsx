@@ -6,12 +6,13 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import toast from 'react-hot-toast';
 
+const supabase = createClient();
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,20 +29,17 @@ export default function LoginPage() {
       return;
     }
 
-    toast.success('Welcome back!');
     router.replace('/journal');
   };
 
   return (
     <div className="min-h-screen bg-cream flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm space-y-8">
-        {/* Logo / Header */}
         <div className="text-center">
-          <h1 className="font-serif text-4xl font-bold text-forest">Foodie</h1>
-          <p className="text-gray-500 mt-2">Welcome back, hungry friend</p>
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Foodie</h1>
+          <p className="text-gray-400 mt-1 text-sm">Log in to your account</p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="email" className="label">Email</label>
@@ -88,9 +86,9 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500">
+        <p className="text-center text-sm text-gray-400">
           Don&apos;t have an account?{' '}
-          <Link href="/auth/signup" className="text-accent font-medium hover:underline">
+          <Link href="/auth/signup" className="text-gray-900 font-medium underline underline-offset-2">
             Sign up
           </Link>
         </p>
